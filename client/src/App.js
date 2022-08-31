@@ -10,8 +10,28 @@ const LoginButton = () => {
       .then(json => setUser(json));
   }, []);
 
+  const [google, setGoogle] = useState();
   useEffect(() => {
-    /* global google */
+    const src = "https://accounts.google.com/gsi/client";
+    if (document.querySelector(`script[src="${src}"]`)) {
+      // no need to load the script again
+      if (window.google) {
+        setGoogle(window.google);
+      }
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    script.async = true;
+    script.onload = () => setGoogle(window.google);
+    document.body.appendChild(script);
+  }, []);
+  useEffect(() => {
+    if (!google) {
+      // not yet loaded
+      return;
+    }
     google.accounts.id.initialize({
       client_id: "53370007102-gasokudqj0tb0s3kup5l7ak0uroehrl8.apps.googleusercontent.com",
       login_uri: `${window.location.protocol}//${window.location.host}/auth/login`,
@@ -20,8 +40,8 @@ const LoginButton = () => {
     google.accounts.id.renderButton(
       document.getElementById("buttonDiv"),
       {theme: "outline", size:"large"}
-    )
-  }, []);
+    );
+  }, [google]);
   return <>
     <div id="buttonDiv" hidden={!user || !!user?.name}/>
     {user?.name && <><div>Hello {user.name}!</div><button onClick={() => window.location.href="/auth/logout"}>Log out</button></>}
